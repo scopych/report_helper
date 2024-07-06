@@ -1,29 +1,51 @@
-#!/usr/bin/perl -T
-#use warnings;
+#!/home/scopych/perl5/perlbrew/perls/perl-5.36.0/bin/perl
+
+use v5.10;
+use warnings;
 use strict;
+use feature qw(say);
 #use utf8;
 #use feature 'unicode_strings'; 
+use Term::ANSIColor;
+use Excel::ValueReader::XLSX;
+use Data::Dump;
 
-#my $in_file = "$ARGV[0]";
+my $filename = "$ARGV[0]";
 
 #open(IN, "<$in_file") or warn "Cannot open $in_file\n";
-
 #my @text = <IN>;
-my @grp_rep;
-#my $grp_number;
+my @card_fields = qw(имя рождение крещение назначение пол надежда служ_год месяци);
+my @months = qw(сентябрь октябрь ноябрь декабрь январь февраль март апрель май июнь июль август);
+my @assignmentment = ('старейшина', 'служебный помощьник', 'пионер', 'подсобный пионер', 'возвещатель', 'некрещенный');
+my @cards;
+my %card; 
 
-fill_grp_rep();
+my $reader = Excel::ValueReader::XLSX->new(xlsx  => $filename);
+my @sheets = $reader->sheet_names;
+my $last_sheet = $sheets[-1];
+my $grid = $reader->values($last_sheet);
+
+say $grid->[1][1];
+#sub split_sheet_on_tabels
+
+=begin
+
+fill_cards();
 #find_grp_number();
 
 my $c = -1;
 while ($c != 0)         # main loop
 { print_menu();
+  print color('red');
   print ">>>_";
+  print color('reset');
   $c = <STDIN>; chomp($c);
   if ($c == 1)
   { print_grp_rep();}
   if ($c == 2)
-  { print "Введи имя или часть имени_";
+  { print color('red');
+    print "Введи имя или часть имени_";
+    print color('reset');
     print_by_name();
   }
   if ($c == 3)
@@ -31,6 +53,8 @@ while ($c != 0)         # main loop
   if ($c == 4)
   { sums();}
   if ($c == 5)
+  { sums()}
+  if ($c == 6)
   { num_publishers();}
   if ($c == 0)
   { exit;}
@@ -39,28 +63,27 @@ while ($c != 0)         # main loop
 #close(IN);
 
 sub print_menu
-{  print "      МЕНЮ\n";
-  print "0 Выйти\n";
-  print "1 Показать весь отчет\n";
-  print "2 Показать отчет по имени\n";
-  print "3 Показать отчет по назначению\n";
-  print "5 Display sums of all fields\n";
-  print "5 Number of publishers\n";
+{ print color('blue'); 
+  say "      МЕНЮ\n";
+  say "0 Выйти\n";
+  say "1 Показать весь отчет\n";
+  say "2 Показать отчет по имени\n";
+  say "3 Показать отчет по назначению\n";
+  say "5 Общие цифры\n";
+  say "6 Количество возвещателей\n";
+  print color('reset');
+
+  return;
 }
 
-sub fill_grp_rep
-{ my @fields = qw(имя публикации видео часы повторы изучения примечания назначение активность);#qw(name pubs video hours returns studis notes serveAs activity);
-  while (<>) #foreach (@text) #while (<IN>)
+sub fill_cards 
+{ 
+  while (<>) 
   { chomp;
-    my %rec;
-    my @row = split(/,/, $_, 9);#split /,/;
-    next if (!defined $row[0]);
-    #if ($row[0] =~ m/^[А-Я][а-я]+?\s+?[А-Я][а-я]*?/)
-    @rec{@fields} = @row;#{ @rec{@fields} = @row;
-    push @grp_rep, \%rec;#  push @grp_rep, \%rec;
-    #}
+     @card{@fields} = ;
+     push @cards, \%card; 
+    
   }
-  #close(IN);
 }
 
 sub print_grp_rep
@@ -70,21 +93,23 @@ sub print_grp_rep
     print_fields_of_hash($rec);
   }
   sums();
+
+  return;
 }
 
 sub print_fields_of_hash
 { my $rec = $_;
   print "\n";
+  print "      №:           $rec->{'№'}\n";
   print "      Имя:         $rec->{'имя'}\n"; 
-  print "      Публикации:  $rec->{'публикации'}\n";
-  print "      Видео:       $rec->{'видео'}\n";
   print "      Часы:        $rec->{'часы'}\n";
-  print "      Повторы:     $rec->{'повторы'}\n";
   print "      Изучения:    $rec->{'изучения'}\n";
   print "      Примечания:  $rec->{'примечания'}\n";
   print "      Назначение:  $rec->{'назначение'}\n";
-  print "      Активность:  $rec->{'активность'}\n";
+  print "      Служил(а)$rec->{'служил(а)'}\n";
   print "\n";
+
+  return;
 }
 
 sub print_by_name
@@ -99,23 +124,46 @@ sub print_by_name
     }
   }
   if (!$isfound)
-  { print "         Не найдено\n";}
+  { print color('yellow');
+    print "         Не найдено\n";
+    print color('reset');
+  }
+
+  return;
 }
 
 sub sums
 { my $rec;
   my $field;
-  my @fields = qw(публикации видео часы повторы изучения); #qw(pubs video hours returns studis);
+  my @fields = qw(часы изучения служил(а));
   my $sum = 0;
+  my ($assignment) = @_;
 
   print "          Общие цифры\n";
-  foreach $field (@fields)
-  { foreach $rec (@grp_rep)
-    { $sum += $rec->{$field};}
-    printf "%15s: %5d\n", $field, $sum;
-    $sum = 0;
+
+  if (defined($assignment))
+  { foreach $field (@fields)
+    { foreach $rec (@grp_rep)
+      { if ($rec->{'назначение'} eq $assignment)
+        { $sum += $rec->{$field};}
+      }
+      printf "%15s: %5d\n", $field, $sum;
+      $sum = 0;
+    }
+    print "\n";
   }
-  print "\n";
+
+  else
+  { foreach $field (@fields)
+    { foreach $rec (@grp_rep)
+      { $sum += $rec->{$field};}
+      printf "%15s: %5d\n", $field, $sum;
+      $sum = 0;
+    }
+    print "\n";
+  }
+
+  return;
 }
 
 sub num_publishers
@@ -130,6 +178,8 @@ sub num_publishers
   printf "общее   : %5d\n", $overal;
   printf "активных: %5d\n", $activ;
   print "\n";
+
+  return;
 }
 
 sub print_by_assignment
@@ -137,7 +187,9 @@ sub print_by_assignment
   my $isfound = 0;
   my $assignment;
 
+  print color('red');
   print "Выбери цифру: 1-возвещатель; 2-подсобный пионер; 3-пионер >_";
+  print color('reset');
   my $user_inp = <STDIN>; chomp($user_inp);
   if ($user_inp == 1)
   { $assignment = 'Возвещатель';}
@@ -154,7 +206,12 @@ sub print_by_assignment
     }
   }
   if (!$isfound)
-  { print "         Не найдено\n";}
+  { print color('yellow');
+    print "         Не найдено\n";
+    print color('reset');
+  }
+  sums($assignment);
+  return;
 }
 
 =begin
