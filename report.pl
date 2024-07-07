@@ -14,11 +14,42 @@ my $filename = "$ARGV[0]";
 
 #open(IN, "<$in_file") or warn "Cannot open $in_file\n";
 #my @text = <IN>;
-my @card_fields = qw(имя рождение крещение назначение пол надежда служ_год месяци);
-my @months = qw(сентябрь октябрь ноябрь декабрь январь февраль март апрель май июнь июль август);
-my @assignmentment = ('старейшина', 'служебный помощьник', 'пионер', 'подсобный пионер', 'возвещатель', 'некрещенный');
+my @ru_card_fields = qw(имя рождение крещение назначение пол надежда служ_год месяци);
+my @ru_months = qw(сентябрь октябрь ноябрь декабрь январь февраль март апрель май июнь июль август);
+my @ru_assignment = ('старейшина', 'служебный помощьник', 'пионер', 'подсобный пионер', 'возвещатель', 'некрещенный');
 my @cards;
-my %card; 
+
+my %values =
+(	houers => "",
+	studys => "",
+	notes  => "",
+);
+
+my %months =
+(	september => \%values,
+	october   => \%values,
+	november  => \%values,
+	december  => \%values,
+	january   => \%values,
+	february  => \%values,
+	march     => \%values,
+	april     => \%values,
+	may       => \%values,
+	june      => \%values,
+	july      => \%values,
+	august    => \%values,
+);
+
+my %card =
+(	name            => "",
+	birth           => "",
+	baptism         => "",
+	assignment      => "",
+	sex             => "",
+	hope            => "",
+	year_of_service => "",
+	month           => \%month,
+);
 
 my $reader = Excel::ValueReader::XLSX->new(xlsx  => $filename);
 my @sheets = $reader->sheet_names;
@@ -26,7 +57,6 @@ my $last_sheet = $sheets[-1];
 my $grid = $reader->values($last_sheet);
 
 say $grid->[1][1];
-#sub split_sheet_on_tabels
 
 =begin
 
