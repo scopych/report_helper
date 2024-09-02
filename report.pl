@@ -1,14 +1,15 @@
 #!/home/scopych/perl5/perlbrew/perls/perl-5.36.0/bin/perl
 
-use v5.10;
+use v5.36;
 use warnings;
 use strict;
 use feature qw(say);
+use Encode qw(encode decode);
 #use utf8;
-#use feature 'unicode_strings'; 
 use Term::ANSIColor;
 use Excel::ValueReader::XLSX;
-use Data::Dump;
+use Data::Dump qw(dump);
+use Data::Printer;
 
 my $filename = "$ARGV[0]";
 
@@ -26,18 +27,18 @@ my %values =
 );
 
 my %months =
-(	september => \%values,
-	october   => \%values,
-	november  => \%values,
-	december  => \%values,
-	january   => \%values,
-	february  => \%values,
-	march     => \%values,
-	april     => \%values,
-	may       => \%values,
-	june      => \%values,
-	july      => \%values,
-	august    => \%values,
+(	september => "",
+	october   => "",
+	november  => "",
+	december  => "",
+	january   => "",
+	february  => "",
+	march     => "",
+	april     => "",
+	may       => "",
+	june      => "",
+	july      => "",
+	august    => "",
 );
 
 my %card =
@@ -48,7 +49,7 @@ my %card =
 	sex             => "",
 	hope            => "",
 	year_of_service => "",
-	month           => \%month,
+	month           => \%months,
 );
 
 my $reader = Excel::ValueReader::XLSX->new(xlsx  => $filename);
@@ -56,8 +57,21 @@ my @sheets = $reader->sheet_names;
 my $last_sheet = $sheets[-1];
 my $grid = $reader->values($last_sheet);
 
-say $grid->[1][1];
 
+sub fill_card
+{	
+	$card{name} = encode('UTF-8', $grid->[5][1]);
+	$values{houers} = $grid->[5][2];
+	$values{studys} = $grid->[5][3];
+	$values{notes}  = $grid->[5][4];
+	$months{may} = \%values;
+	$card{month} = \%months;
+	say dump(%card);
+}
+
+fill_card();
+p %card;
+			
 =begin
 
 fill_cards();
